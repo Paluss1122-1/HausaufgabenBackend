@@ -5,11 +5,16 @@
   "description": "Backend für Hausaufgaben-Daten mit Express und Firebase",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "node index.js"
   },
-  "keywords": ["express", "firebase", "backend"],
+  "keywords": ["express", "firebase", "backend", "hausaufgaben", "render"],
   "author": "Paul",
   "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "dependencies": {
     "express": "^5.1.0",
     "firebase": "^11.9.1"
