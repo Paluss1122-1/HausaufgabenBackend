@@ -19,7 +19,7 @@ const firebaseConfig = {
 };
 
 // Validierung der Firebase Config
-const requiredEnvVars = ['FIREBASE_API_KEY', 'FIREBASE_AUTH_DOMAIN', 'FIREBASE_PROJECT_ID'];
+const requiredEnvVars = ['apiKey', 'authDomain', 'projectId'];
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
