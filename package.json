@@ -2,14 +2,14 @@
   "name": "bot-backend",
   "version": "1.0.0",
   "type": "module",
+  "description": "Backend für Hausaufgaben-Daten mit Express und Firebase",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": ["express", "firebase", "backend"],
+  "author": "Paul",
+  "license": "MIT",
   "dependencies": {
     "express": "^5.1.0",
     "firebase": "^11.9.1"
