@@ -5,9 +5,9 @@ import { getFirestore, doc, getDoc } from 'firebase/firestore';
 const app = express();
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBW0WzA9IJoEZ2GuTBMaUoWpOQildKfohU",
-    authDomain: "solutions-dashboard-7-1f6e4.firebaseapp.com",
-    projectId: "solutions-dashboard-7-1f6e4",
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.FIREBASE_PROJECT_ID,
 };
 
 const fbApp = initializeApp(firebaseConfig);
