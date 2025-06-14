@@ -5,17 +5,17 @@ import cors from 'cors';
 
 const app = express();
 
-// CORS aktivieren (wichtig für Web-APIs)
+// CORS aktivieren
 app.use(cors());
 
 // JSON parsing aktivieren
 app.use(express.json());
 
-// Firebase Config mit Validierung
+// Firebase Config - genau wie deine Render Environment Variables
 const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.FIREBASE_PROJECT_ID
+  apiKey: process.env.apiKey,
+  authDomain: process.env.authDomain,
+  projectId: process.env.projectId,
 };
 
 // Validierung der Firebase Config
@@ -42,8 +42,7 @@ try {
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
-    timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV || 'development'
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -59,57 +58,33 @@ app.get('/api/hausaufgaben', async (req, res) => {
     try {
         console.log('Fetching Hausaufgaben...');
         
-        const docRef = doc(db, 'Hausaufgaben', 'hausaufgaben');
-        const snap = await getDoc(docRef);
+        const snap = await getDoc(doc(db, 'Hausaufgaben', 'hausaufgaben'));
         
         if (snap.exists()) {
-            const data = snap.data();
             console.log('Daten erfolgreich abgerufen');
             res.json({ 
               success: true, 
-              data: data,
-              timestamp: new Date().toISOString()
+              data: snap.data()
             });
         } else {
             console.log('Dokument nicht gefunden');
             res.status(404).json({ 
               success: false, 
-              error: 'Dokument nicht gefunden',
-              path: 'Hausaufgaben/hausaufgaben'
+              error: 'Nicht gefunden'
             });
         }
     } catch (error) {
         console.error('Fehler beim Abrufen der Hausaufgaben:', error);
         res.status(500).json({ 
           success: false, 
-          error: error.message,
-          code: error.code || 'UNKNOWN_ERROR'
+          error: error.message
         });
     }
-});
-
-// Error Handler
-app.use((error, req, res, next) => {
-  console.error('Unhandled error:', error);
-  res.status(500).json({
-    success: false,
-    error: 'Interner Server Fehler'
-  });
-});
-
-// 404 Handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'Endpoint nicht gefunden',
-    path: req.originalUrl
-  });
 });
 
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server läuft auf Port ${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`Firebase Project: ${process.env.FIREBASE_PROJECT_ID}`);
+    console.log(`Firebase Project: ${process.env.projectId}`);
 });
