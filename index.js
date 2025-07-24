@@ -136,26 +136,17 @@ app.get('/api/hausaufgaben', async (req, res) => {
 });
 
 app.get('/api/hausaufgaben/text', async (req, res) => {
-  try {
-    const now = Date.now();
-    if (!cachedData || !lastFetch || (now - lastFetch) > CACHE_DURATION) {
-      await fetchAndCacheHausaufgaben();
-    }
-    if (cachedData.success) {
-      // Beispiel: Daten als Text formatieren
-      const data = cachedData.data;
-      let text = '';
-      for (const [key, value] of Object.entries(data)) {
-        text += `${key}: ${value}\n`;
-      }
-      res.set('Content-Type', 'text/plain');
-      res.send(text);
-    } else {
-      res.status(404).send('Keine Hausaufgaben gefunden.');
-    }
-  } catch (error) {
-    res.status(500).send('Fehler beim Abrufen der Hausaufgaben.');
+  const now = Date.now();
+  if (!cachedData || !lastFetch || (now - lastFetch) > CACHE_DURATION) {
+    await fetchAndCacheHausaufgaben();
   }
+  const data = cachedData.data;
+  let text = '';
+  for (const [key, value] of Object.entries(data)) {
+    text += `${key}: ${value}\n`;
+  }
+  res.set('Content-Type', 'text/plain');
+  res.send(text);
 });
 
 const PORT = process.env.PORT || 3000;
