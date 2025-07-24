@@ -47,10 +47,7 @@ async function fetchAndCacheHausaufgaben() {
 
     if (data) {
       cachedData = {
-        success: true,
-        data: data,
-        timestamp: new Date().toISOString(),
-        source: 'supabase-live'
+        data
       };
       lastFetch = Date.now();
       console.log('Daten erfolgreich aktualisiert und gecacht');
@@ -142,5 +139,4 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server läuft auf Port ${PORT}`);
-  console.log(`Firebase Project: ${process.env.projectId}`);
 });
