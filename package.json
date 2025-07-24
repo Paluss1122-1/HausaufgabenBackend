@@ -8,7 +8,13 @@
     "start": "node index.js",
     "dev": "node index.js"
   },
-  "keywords": ["express", "firebase", "backend", "hausaufgaben", "render"],
+  "keywords": [
+    "express",
+    "firebase",
+    "backend",
+    "hausaufgaben",
+    "render"
+  ],
   "author": "Paul",
   "license": "MIT",
   "engines": {
@@ -16,8 +22,9 @@
     "npm": ">=8.0.0"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.52.1",
+    "cors": "^2.8.5",
     "express": "^4.19.2",
-    "firebase": "^11.9.1",
-    "cors": "^2.8.5"
+    "firebase": "^11.9.1"
   }
 }
