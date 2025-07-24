@@ -1,5 +1,6 @@
 import express from 'express';
-import { createClient } from '@supabase/supabase-js';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import cors from 'cors';
 
 // Cache für die Hausaufgaben-Daten
@@ -15,12 +16,15 @@ app.use(cors());
 // JSON parsing aktivieren
 app.use(express.json());
 
-// Supabase Config aus Environment Variables
-const supabaseUrl = process.env.supabaseUrl;
-const supabaseKey = process.env.supabaseKey;
+// Firebase Config - genau wie deine Render Environment Variables
+const firebaseConfig = {
+  apiKey: process.env.apiKey,
+  authDomain: process.env.authDomain,
+  projectId: process.env.projectId,
+};
 
-// Validierung der Supabase Config
-const requiredEnvVars = ['supabaseUrl', 'supabaseKey'];
+// Validierung der Firebase Config
+const requiredEnvVars = ['apiKey', 'authDomain', 'projectId'];
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
@@ -28,29 +32,22 @@ if (missingVars.length > 0) {
   process.exit(1);
 }
 
-// Supabase Client initialisieren
-const supabase = createClient(supabaseUrl, supabaseKey);
+let fbApp, db;
 
-// Funktion zum Abrufen und Aktualisieren der Hausaufgaben-Daten von Supabase
+fbApp = initializeApp(firebaseConfig);
+db = getFirestore(fbApp);
+// Funktion zum Abrufen und Aktualisieren der Hausaufgaben-Daten
 async function fetchAndCacheHausaufgaben() {
   try {
-    console.log('Aktualisiere Hausaufgaben-Daten von Supabase...');
-    // Passe den Tabellennamen ggf. an!
-    const { data, error } = await supabase
-      .from('Hausaufgaben')
-      .select('*')
-      .single();
+    console.log('Aktualisiere Hausaufgaben-Daten...');
+    const snap = await getDoc(doc(db, 'Hausaufgaben', 'hausaufgaben'));
 
-    if (error) {
-      throw error;
-    }
-
-    if (data) {
+    if (snap.exists()) {
       cachedData = {
         success: true,
-        data: data,
+        data: snap.data(),
         timestamp: new Date().toISOString(),
-        source: 'supabase-live'
+        source: 'firebase-live'
       };
       lastFetch = Date.now();
       console.log('Daten erfolgreich aktualisiert und gecacht');
@@ -73,9 +70,38 @@ async function fetchAndCacheHausaufgaben() {
   }
 }
 
-// ...der Rest deines Codes bleibt gleich, außer dem Live-Endpoint unten...
+// Daten beim Server-Start einmal laden
+fetchAndCacheHausaufgaben();
 
-// Ersetze den Live-Endpoint für /api/hausaufgaben durch Supabase:
+// Health Check Endpoint - mit Datenaktualisierung
+app.get('/health', async (req, res) => {
+  // Daten bei Health Check auch aktualisieren
+  await fetchAndCacheHausaufgaben();
+
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    dataStatus: cachedData ? 'Loaded' : 'Not loaded',
+    lastDataFetch: lastFetch ? new Date(lastFetch).toISOString() : 'Never'
+  });
+});
+
+// Root endpoint - automatische Datenaktualisierung
+app.get('/', async (req, res) => {
+  // Daten bei jedem Root-Aufruf aktualisieren
+  await fetchAndCacheHausaufgaben();
+
+  res.json({
+    message: 'Hausaufgaben API für Chatbase läuft',
+    endpoints: [
+      '/api/hausaufgaben - Alle Hausaufgaben',
+      '/api/hausaufgaben/today - Heutige Hausaufgaben',
+      '/health - Server Status'
+    ],
+    lastDataUpdate: lastFetch ? new Date(lastFetch).toISOString() : 'Noch nicht geladen'
+  });
+});
+
 app.get('/api/hausaufgaben', async (req, res) => {
   try {
     // Cache prüfen - wenn älter als 30 Sekunden, neu laden
@@ -110,11 +136,9 @@ app.get('/api/hausaufgaben', async (req, res) => {
   }
 });
 
-// Entferne den alten Firebase-Live-Endpoint (zweites /api/hausaufgaben)!
-
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server läuft auf Port ${PORT}`);
-  console.log(`Supabase Project: ${process.env.supabaseUrl}`);
+  console.log(`Firebase Project: ${process.env.projectId}`);
 });
