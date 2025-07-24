@@ -142,6 +142,7 @@ app.get('/api/hausaufgaben/text', async (req, res) => {
   }
   const data = cachedData.data;
   let text = '';
+  text += `Hausaufgaben: \n`
   for (const [key, value] of Object.entries(data)) {
     text += `${key}: ${value}\n`;
   }
