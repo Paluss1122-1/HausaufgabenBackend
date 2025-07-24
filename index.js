@@ -1,6 +1,5 @@
 import express from 'express';
-import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { createClient } from '@supabase/supabase-js';
 import cors from 'cors';
 
 // Cache für die Hausaufgaben-Daten
@@ -16,15 +15,12 @@ app.use(cors());
 // JSON parsing aktivieren
 app.use(express.json());
 
-// Firebase Config - genau wie deine Render Environment Variables
-const firebaseConfig = {
-  apiKey: process.env.apiKey,
-  authDomain: process.env.authDomain,
-  projectId: process.env.projectId,
-};
+// Supabase Config aus Environment Variables
+const supabaseUrl = process.env.supabaseUrl;
+const supabaseKey = process.env.supabaseKey;
 
-// Validierung der Firebase Config
-const requiredEnvVars = ['apiKey', 'authDomain', 'projectId'];
+// Validierung der Supabase Config
+const requiredEnvVars = ['supabaseUrl', 'supabaseKey'];
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
@@ -32,22 +28,29 @@ if (missingVars.length > 0) {
   process.exit(1);
 }
 
-let fbApp, db;
+// Supabase Client initialisieren
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-fbApp = initializeApp(firebaseConfig);
-db = getFirestore(fbApp);
-// Funktion zum Abrufen und Aktualisieren der Hausaufgaben-Daten
+// Funktion zum Abrufen und Aktualisieren der Hausaufgaben-Daten von Supabase
 async function fetchAndCacheHausaufgaben() {
   try {
-    console.log('Aktualisiere Hausaufgaben-Daten...');
-    const snap = await getDoc(doc(db, 'Hausaufgaben', 'hausaufgaben'));
+    console.log('Aktualisiere Hausaufgaben-Daten von Supabase...');
+    // Passe den Tabellennamen ggf. an!
+    const { data, error } = await supabase
+      .from('Hausaufgaben')
+      .select('*')
+      .single();
 
-    if (snap.exists()) {
+    if (error) {
+      throw error;
+    }
+
+    if (data) {
       cachedData = {
         success: true,
-        data: snap.data(),
+        data: data,
         timestamp: new Date().toISOString(),
-        source: 'firebase-live'
+        source: 'supabase-live'
       };
       lastFetch = Date.now();
       console.log('Daten erfolgreich aktualisiert und gecacht');
@@ -70,8 +73,7 @@ async function fetchAndCacheHausaufgaben() {
   }
 }
 
-// Daten beim Server-Start einmal laden
-fetchAndCacheHausaufgaben();
+fetchAndCacheHausaufgaben()
 
 // Health Check Endpoint - mit Datenaktualisierung
 app.get('/health', async (req, res) => {
